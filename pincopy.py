@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
-"""
-pincopy.py — pin titles + descriptions via local Ollama (qwen2.5:3b). $0, offline-safe.
-
-Pinterest is a SEARCH engine: titles ≤100 chars front-load keywords, descriptions
-≤450 chars read naturally and end with a soft CTA. If Ollama is down, deterministic
-templates keep the factory running.
-
-    /usr/bin/python3 pincopy.py --themes ../kdp/themes/animals.json --out out/animals/copy.json
-"""
+"""Pin titles and descriptions via a local Ollama model -- free, and it
+falls back to templates if Ollama isn't running so the factory doesn't stall."""
 import argparse, json, re, urllib.request
 
 OLLAMA = "http://localhost:11434/api/generate"

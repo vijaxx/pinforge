@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
-"""
-gen_cover.py — generate the two Gumroad cover images that gen_store_assets.py never
-produced: the per-theme ocean-life cover (it was added after assets were last built)
-and a dedicated premium cover for the Everything Pack mega-bundle.
-
-Read-only on the KDP theme/engine dependency (same as pins.py/pack.py/the daily poster);
-writes only into this project's out/. Deterministic.
-
-    /usr/bin/python3 gen_cover.py            # both
-    /usr/bin/python3 gen_cover.py ocean      # just ocean-life
-    /usr/bin/python3 gen_cover.py everything # just the bundle
+"""Covers for the two products gen_store_assets.py doesn't handle: the
+ocean-life theme (added after the others were built) and the Everything Pack.
 """
 import json, os, sys
 

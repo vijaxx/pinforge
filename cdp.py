@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
-"""Minimal Chrome DevTools Protocol client for the PinForge browser (port 9224).
-
-Reuses the same approach as the KDP automation (/tmp/kdp_rw.py): raw CDP over a
-websocket so we can do file-chooser intercepts and real mouse events that
-Pinterest/Gumroad React UIs accept where synthetic clicks fail.
-
-Usage as a library:
-    from cdp import Tab
-    t = Tab.attach(url_contains="pinterest.com")
-    print(t.eval("document.title"))
-"""
+"""Small CDP client for the Chrome profile PinForge drives on port 9224.
+Talks to Chrome directly over the websocket so file uploads and clicks land
+the way Pinterest/Gumroad's React UI actually expects them to."""
 import json, time, urllib.request
 from websocket import create_connection
 

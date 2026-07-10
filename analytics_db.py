@@ -1,25 +1,7 @@
 #!/usr/bin/env python3
-"""
-analytics_db.py — SQLite analytics store for PinForge (internal, read-side only).
-
-Scaffolding to replace ad-hoc reads of the append-only `post_log.jsonl` with a
-queryable store. This module ONLY builds/queries the DB; it never posts, uploads,
-or touches the live Pinterest/Gumroad account.
-
-Tables:
-    pins       generated pin creatives (catalog, sourced from out/*/manifest.json)
-    posts      posting events (sourced from post_log.jsonl)
-    analytics  per-pin metric snapshots over time (impressions/saves/clicks)
-    sales      Gumroad sales rows (referrer attribution)
-
-Usage:
-    /usr/bin/python3 analytics_db.py init          # create pinforge.db schema
-    /usr/bin/python3 analytics_db.py import-log     # load post_log.jsonl -> posts
-    /usr/bin/python3 analytics_db.py import-pins     # load out/*/manifest.json -> pins
-    /usr/bin/python3 analytics_db.py summary         # quick counts
-
-The importers are idempotent (INSERT OR IGNORE on natural keys) and read their
-JSON sources read-only, so they are safe to re-run.
+"""Local SQLite cache over post_log.jsonl and the out/ manifests, so posting
+history and the product catalog are actually queryable instead of grepped by
+hand. Read-only against Pinterest/Gumroad -- never posts or uploads anything.
 """
 import argparse, glob, json, os, sqlite3
 

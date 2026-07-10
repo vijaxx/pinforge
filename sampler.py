@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
-"""
-sampler.py — FREE 10-puzzle lead-magnet pack. The funnel entrance:
-free pins get the saves/clicks on Pinterest -> $0 Gumroad product captures the
-email -> the PDF's back pages carry CLICKABLE links to the 7 paid packs, the
-$14.99 Complete Collection, and the Amazon paperbacks.
-
-    /usr/bin/python3 sampler.py
-"""
+"""Free 10-puzzle lead magnet. The PDF's back pages link to the paid packs
+and the paperbacks -- Pinterest just needs to find it."""
 import json, os, random, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))

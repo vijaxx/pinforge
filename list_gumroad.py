@@ -1,37 +1,24 @@
 #!/usr/bin/env python3
-"""
-list_gumroad.py — list a PinForge pack/bundle on Gumroad from its manifest, via the
-already-logged-in PinForge Chrome (port 9224, driven by cdp.py). Lets Agent Kaushik publish
-products himself instead of escalating for Vijaxx's login on every listing.
-
-  python3 list_gumroad.py out/everything/manifest.json            # create DRAFT (safe default)
-  python3 list_gumroad.py out/everything/manifest.json --publish  # create + PUBLISH live
-
-SAFETY (matches the team's live-execution rails):
-  • Reuses an EXISTING logged-in Gumroad session in Chrome 9224 — it NEVER types Vijaxx's password.
-    If not logged in, it notifies Vijaxx and aborts (no half-listing).
-  • DRAFT by default. Publishing live needs --publish (Kaushik passes it once the flow is calibrated).
-  • Any step that can't find its Gumroad element ABORTS + notifies "needs calibration" — it never
-    silently creates a malformed product. Manifest gumroad_status is only advanced on real success.
-
-CALIBRATION: Gumroad's product-creation DOM can't be guessed perfectly. The GUMROAD-SPECIFIC
-selectors live in ONE block below (marked ⚙ CALIBRATE). On the first supervised run against the
-real logged-in page, only that block may need tweaking; everything else is generic.
+"""Lists a pack on Gumroad from its manifest, driven through the Chrome
+session already logged into port 9224. Draft by default; --publish takes it
+live. Never touches a password -- if the session isn't logged in this just
+stops and says so instead of guessing. Gumroad's product-form selectors are
+the one thing likely to drift; they're grouped in a block below marked CALIBRATE.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, time
 from cdp import Tab, tabs
 
-NOTIFY = "/Users/vijaxx/.project-agents/notify.sh"
+NOTIFY = os.path.expanduser("~/.project-agents/notify.sh")
 GUMROAD_PRODUCTS = "https://gumroad.com/products"
 GUMROAD_NEW = "https://gumroad.com/products/new"
 
 
-ENSURE_PINFORGE = "/Users/vijaxx/clauwork/pinforge/ensure_chrome_pinforge.sh"
+ENSURE_PINFORGE = os.path.expanduser("~/clauwork/pinforge/ensure_chrome_pinforge.sh")
 
 def notify(msg: str, url: str | None = None) -> None:
-    """Plain notify, or — when `url` is given — a CLICKABLE notification that opens `url` in the
-    PinForge automation Chrome (port 9224) so Vijaxx lands in the exact browser to act."""
+    """Plain push notification, or -- when `url` is given -- a clickable one that opens `url`
+    in the PinForge Chrome (port 9224) so whoever's looking lands in the right browser."""
     args = [NOTIFY, msg] + (["9224", url, ENSURE_PINFORGE] if url else [])
     try:
         subprocess.run(args, timeout=10)
@@ -146,21 +133,21 @@ def main() -> int:
             if p.get("pdf", "").startswith("out/") else p.get("pdf", "")
         pdf = p["pdf"] if os.path.exists(p["pdf"]) else (cand if os.path.exists(cand) else pdf)
     if not os.path.exists(pdf):
-        notify(f"🔑 Kaushik: can't list '{title}' — PDF not found ({p.get('pdf')}).")
+        notify(f"can't list '{title}' — PDF not found ({p.get('pdf')}).")
         print("PDF not found:", pdf); return 1
 
     if not chrome_up():
-        notify("🔑 Kaushik: tap to bring up the PinForge Chrome + open Gumroad (it was down). "
+        notify("PinForge Chrome is down — tap to bring it up and open Gumroad. "
                "Make sure Gumroad is logged in there.", url="https://gumroad.com/products")
         return 1
 
     t = Tab.open(GUMROAD_PRODUCTS)
     time.sleep(3)
     if not logged_in(t):
-        notify("🔑 Kaushik needs you: tap to open Gumroad in the PinForge Chrome and log in once. "
-               "I never type your password — once you're in, I list products myself.",
+        notify("not logged into Gumroad — tap to log in once in the PinForge Chrome. "
+               "This never types your password; once you're in, it lists products on its own.",
                url="https://gumroad.com/login")
-        print("Not logged into Gumroad — aborted, notified Vijaxx."); return 2
+        print("Not logged into Gumroad — aborted."); return 2
 
     # ─── Gumroad new-product flow (CALIBRATED + verified live 2026-06-23 against the real DOM) ───
     def click_by_text(rx):
@@ -174,10 +161,10 @@ def main() -> int:
     ok_name  = set_input(t, "input[id^='name-']", title)
     ok_price = set_input(t, "input[id^='price-']", str(price))
     if not (ok_name and ok_price):
-        notify(f"🔑 Kaushik: Gumroad new-product form changed — name/price field not found "
-               f"(needs calibration). '{title}' NOT listed."); return 3
+        notify(f"Gumroad's new-product form changed — name/price field not found "
+               f"(needs recalibrating). '{title}' NOT listed."); return 3
     if not click_by_text("next:?\\s*customize"):
-        notify(f"🔑 Kaushik: Gumroad 'Next: Customize' not found (needs calibration)."); return 3
+        notify("Gumroad's 'Next: Customize' button not found (needs recalibrating)."); return 3
     time.sleep(6)  # creates the draft, lands on /products/<id>/edit
 
     # PAGE 2 — /edit: set the description (a contenteditable rich field), then Save and continue.
@@ -192,12 +179,12 @@ def main() -> int:
     if sq and set_thumbnail(t, sq):
         time.sleep(9)  # let the square thumb upload/validate before saving
     if not click_by_text("save and continue"):
-        notify(f"🔑 Kaushik: Gumroad 'Save and continue' not found (needs calibration)."); return 4
+        notify("Gumroad's 'Save and continue' button not found (needs recalibrating)."); return 4
     time.sleep(6)  # lands on /edit/content
 
     # PAGE 3 — /edit/content: upload the PDF into the file input, Save changes.
     if not set_file_input(t, "input[type='file']", pdf):
-        notify(f"🔑 Kaushik: Gumroad content file-input not found (needs calibration). '{title}' draft incomplete.")
+        notify(f"Gumroad's content file-input not found (needs recalibrating). '{title}' draft incomplete.")
         return 5
     time.sleep(10)  # let the PDF upload finish
     click_by_text("save changes"); time.sleep(5)
@@ -208,8 +195,8 @@ def main() -> int:
         if click_by_text("publish and continue|^publish"):
             status = "LISTED"; time.sleep(6)
         else:
-            notify(f"🔑 Kaushik: '{title}' is a complete Gumroad DRAFT but the Publish button wasn't "
-                   f"found — review + publish manually.")
+            notify(f"'{title}' is a complete Gumroad draft but the Publish button wasn't "
+                   f"found — review and publish manually.")
     # capture the public URL if we can
     purl = t.eval("(function(){const a=Array.from(document.querySelectorAll('a')).find(a=>/gumroad\\.com\\/l\\//.test(a.href));return a?a.href:'';})()")
     if purl:
@@ -221,10 +208,10 @@ def main() -> int:
     json.dump(m, open(a.manifest, "w"), indent=2, ensure_ascii=False)
 
     if status == "LISTED":
-        notify(f"✅ Kaushik (PinForge) shipped live: '{title}' published on Gumroad (${price}).")
+        notify(f"published on Gumroad: '{title}' (${price}).")
     else:
-        notify(f"✅ Kaushik: '{title}' built as a Gumroad DRAFT (${price}) — review + hit Publish "
-               f"(or re-run with --publish once the flow is confirmed).")
+        notify(f"'{title}' built as a Gumroad draft (${price}) — review and hit Publish "
+               f"(or re-run with --publish once the flow looks right).")
     print(f"done: status={status}")
     return 0
 

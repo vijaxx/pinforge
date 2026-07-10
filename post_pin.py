@@ -1,25 +1,12 @@
 #!/usr/bin/env python3
-"""Post a single Pinterest pin via the attached PinForge Chrome (port 9224).
+"""Posts one pin through Pinterest's pin-builder UI over CDP.
 
-Reverse-engineered pin-builder (https://in.pinterest.com/pin-builder/):
-  - file input  : input[type=file]                       (image upload)
-  - title       : textarea[placeholder="Add your title"]
-  - description : textarea[placeholder="Tell everyone what your Pin is about"]
-  - link        : textarea[placeholder="Add a destination link"]
-  - board       : selector button (default shows current board) -> flyout w/ filter
-  - publish     : button "Publish"
-
-Text is set via the React native value-setter (see _set_textarea) because direct
-.value assignment is ignored by React's controlled inputs. The image is attached
-via DOM.setFileInputFiles (real file input).
-
-ORDER MATTERS: both the image upload and the board selection remount the draft
-form (new field ids) and wipe any text already entered. So we upload -> wait for
-the real blob: preview + settle -> select board -> THEN fill the fields with
-verify-and-retry (_fill_verified). A publish gate refuses to publish if title or
-link came back empty, so a UI change can never push a blank pin live again.
-
-CLI:  post_pin.py <image> <title> <link> <board> [description]
+React ignores a plain .value assignment on its inputs, so text fields go
+through React's native setter instead (_set_textarea). Uploading an image or
+picking a board both remount the form and wipe anything already typed, so the
+order here matters: upload, wait for the real preview, pick the board, then
+fill fields with verify-and-retry. Won't publish if title or link come back
+empty -- a UI change should never be able to push a blank pin live.
 """
 import sys, time, json, random
 from cdp import Tab

@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
-"""
-factory.py — one command per product line: pack PDF + 5 pins + SEO copy + manifest.
+"""Builds one theme end to end -- pack PDF, five pins, SEO copy, manifest.
 
-    /usr/bin/python3 factory.py --theme animals
-    /usr/bin/python3 factory.py --all
-
-Output per theme:
-    out/<theme>/pack.pdf          the sellable product (Gumroad)
-    out/<theme>/pins/pin_0N.png   Pinterest creatives (1000x1500)
-    out/<theme>/copy.json         pin titles + descriptions (Ollama, template fallback)
-    out/<theme>/manifest.json     everything stitched together, ready to list/post
+    python3 factory.py --theme animals
+    python3 factory.py --all
 """
 import argparse, glob, json, os, time
 

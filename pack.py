@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
-"""
-pack.py — print-at-home puzzle pack (DIGITAL edition) for Gumroad.
-
-Reuses the KDP word-search engine (../kdp/wordsearch.py) but produces a digital
-product: personal-use license page, print-at-home framing, and a back page that
-cross-sells the Amazon paperback line — every download markets the KDP books.
-
-RUN WITH /usr/bin/python3 (it has reportlab + PIL):
-
-    /usr/bin/python3 pack.py --themes ../kdp/themes/animals.json --out out/animals/pack.pdf
-"""
+"""Digital, print-at-home version of a puzzle pack for Gumroad. Same
+word-search engine as the KDP paperbacks (imported from ../kdp), repackaged
+with a personal-use license page and a cross-sell to the paperback line."""
 import argparse, json, os, random, sys
 
 KDP_DIR = os.environ.get("KDP_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kdp")

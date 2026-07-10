@@ -1,21 +1,8 @@
 #!/usr/bin/env python3
-"""PinForge daily pin poster.
-
-Builds a queue of unposted pins from every out/<theme>/manifest.json, posts up
-to N per run via post_pin.post(), and marks each pin posted in its manifest so
-runs never duplicate. State (per-day counter) in post_state.json.
-
-Cadence (mirrors PLAYBOOK):
-  - <=3 pins/day (Pinterest punishes burst-posting young accounts).
-  - Sampler-first weighting for the first 14 days (account created 2026-06-10):
-    lead each run with a free-sampler pin to feed the algorithm.
-  - ~1 in 4 paid pins = the $14.99 Complete Collection (revenue-per-buyer raiser).
-
-Usage:
-  run_batch.py            # post the daily batch (default 3, respects daily cap)
-  run_batch.py --n 2      # post up to 2 this run
-  run_batch.py --dry      # show the queue + what it would post, post nothing
-"""
+"""Daily pin-posting run: builds a queue from every manifest, posts a few,
+marks them done so nothing repeats. Caps posts per day and leans on the free
+sampler early on new accounts -- Pinterest is not kind to bursty posting on a
+young profile."""
 import json, sys, time, datetime, glob, os, random
 
 HERE = os.path.dirname(os.path.abspath(__file__))

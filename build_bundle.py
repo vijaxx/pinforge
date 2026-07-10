@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
-"""
-build_bundle.py — stitch the existing built pack PDFs into one mega-bundle
-("The Everything Pack") for Gumroad, plus a manifest carrying the listing copy.
-
-This is the AOV-unlock product: every printable pack in one premium download.
-Internal + offline — uses reportlab (fresh cover + contents page) and pypdf
-(merge). It only READS this project's own out/<theme>/pack.pdf files and writes
-out/everything/. It never posts, lists, or touches the live store.
-
-    /usr/bin/python3 build_bundle.py
+"""Merges the existing pack PDFs into one bundle for Gumroad. Only reads
+out/<theme>/pack.pdf and writes out/everything/ -- doesn't touch the live store.
 """
 import io, json, os, time
 

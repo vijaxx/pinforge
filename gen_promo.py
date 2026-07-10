@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-"""
-gen_promo.py — pins + store assets for the two funnel products:
-  out/sampler/    FREE 10-puzzle sampler (lead magnet — the algorithm fuel)
-  out/collection/ $14.99 Complete Collection (the AOV raiser)
-
-    /usr/bin/python3 gen_promo.py
-"""
+"""Pins and store assets for the two funnel products -- the free sampler
+and the Complete Collection bundle."""
 import json, os, glob
 
 import pins, gen_store_assets

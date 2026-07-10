@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""
-gen_store_assets.py — Gumroad store images per theme:
-  out/<theme>/cover.png  1600x900 horizontal (product page hero)
-  out/<theme>/thumb.png  600x600 square (Library/Discover/Profile)
-
-    /usr/bin/python3 gen_store_assets.py
-"""
+"""Gumroad store images per theme: a horizontal cover and a square thumbnail."""
 import json, os, glob
 from PIL import Image, ImageDraw, ImageFont
 
