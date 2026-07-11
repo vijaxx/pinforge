@@ -2,7 +2,9 @@
 """Renders the 1000x1500 Pinterest pin images. Each one shows an actual
 mini puzzle grid with a couple of words pre-highlighted, so what's being sold
 is obvious at thumbnail size, not just a text card."""
+from __future__ import annotations
 import argparse, json, os, random, string, sys
+from typing import Any
 
 KDP_DIR = os.environ.get("KDP_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kdp")
 if not os.path.isdir(KDP_DIR):  # live dir moved; fall back to the canonical KDP engine location
@@ -11,6 +13,8 @@ sys.path.insert(0, KDP_DIR)
 import wordsearch as ws  # noqa: E402
 
 from PIL import Image, ImageDraw, ImageFont  # noqa: E402
+
+Palette = tuple[str, str, str, str]
 
 W, H = 1000, 1500
 SUP = "/System/Library/Fonts/Supplemental/"
@@ -36,18 +40,20 @@ PALETTES = {
 DEFAULT_PALETTE = ("#f6f3ea", "#2c4f3b", "#e0a458", "#1d1d1b")
 
 
-def font(path, size):
+def font(path: str, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(path, size)
 
 
-def _lum(hexcolor):
+def _lum(hexcolor: str) -> float:
     h = hexcolor.lstrip("#")
     r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
-def wrap_to_width(draw, text, fnt, max_w):
-    words, lines, cur = text.split(), [], ""
+def wrap_to_width(draw: ImageDraw.ImageDraw, text: str, fnt: ImageFont.FreeTypeFont, max_w: float) -> list[str]:
+    words = text.split()
+    lines: list[str] = []
+    cur = ""
     for w in words:
         trial = (cur + " " + w).strip()
         if draw.textlength(trial, font=fnt) <= max_w:
@@ -61,7 +67,8 @@ def wrap_to_width(draw, text, fnt, max_w):
     return lines
 
 
-def mini_grid_image(theme_words, n=10, highlight_n=2, seed=0):
+def mini_grid_image(theme_words: list[str], n: int = 10, highlight_n: int = 2,
+                     seed: int = 0) -> tuple[Image.Image, list[str]]:
     """Render a real n×n puzzle as a PIL image, with a couple of words highlighted."""
     rnd = random.Random(seed)
     pool = [w for w in ws.clean_words(theme_words) if 4 <= len(w) <= n]
@@ -104,7 +111,7 @@ def mini_grid_image(theme_words, n=10, highlight_n=2, seed=0):
     return img, [w.title() for w in placed[:highlight_n]]
 
 
-def headline_variants(data):
+def headline_variants(data: dict[str, Any]) -> list[str]:
     title = data.get("title", "Word Search")
     n = len(data.get("puzzles", []))
     # Derive a clean theme label for the "{short} Word Search" headline. Strip the
@@ -124,7 +131,8 @@ def headline_variants(data):
     ]
 
 
-def render_pin(data, palette, headline, seed, out_path, pill_text=None, cta_text=None):
+def render_pin(data: dict[str, Any], palette: Palette, headline: str, seed: int, out_path: str,
+                pill_text: str | None = None, cta_text: str | None = None) -> str:
     bg, band, accent, ink = palette
     n_puzzles = len(data.get("puzzles", []))
     all_words = [w for p in data["puzzles"] for w in p["words"]]
@@ -146,7 +154,7 @@ def render_pin(data, palette, headline, seed, out_path, pill_text=None, cta_text
     if len(lines) > 2:
         f_head = font(F_SERIF_B, 52)
         lines = wrap_to_width(d, headline, f_head, W - 140)
-    y = 116 if len(lines) > 1 else 150
+    y: float = 116 if len(lines) > 1 else 150
     for ln in lines:
         lw = d.textlength(ln, font=f_head)
         d.text(((W - lw) / 2, y), ln, font=f_head, fill="#ffffff")
@@ -161,7 +169,7 @@ def render_pin(data, palette, headline, seed, out_path, pill_text=None, cta_text
     d.rounded_rectangle(card, radius=28, fill="#ffffff", outline="#e3ded2", width=2)
 
     grid_img, shown_words = mini_grid_image(all_words, n=10, seed=seed)
-    grid_img = grid_img.resize((gsize, gsize), Image.LANCZOS)
+    grid_img = grid_img.resize((gsize, gsize), Image.Resampling.LANCZOS)
     img.paste(grid_img, (card[0] + (card[2] - card[0] - gsize) // 2, card_top + pad_in))
 
     # word chips under the grid
@@ -205,13 +213,13 @@ def render_pin(data, palette, headline, seed, out_path, pill_text=None, cta_text
     return out_path
 
 
-def build(themes_path, outdir, count=5):
+def build(themes_path: str, outdir: str, count: int = 5) -> list[dict[str, Any]]:
     data = json.load(open(themes_path))
     slug = os.path.splitext(os.path.basename(themes_path))[0]
     palette = PALETTES.get(slug, PALETTES.get(data.get("palette"), DEFAULT_PALETTE))
     os.makedirs(outdir, exist_ok=True)
     heads = headline_variants(data)
-    out = []
+    out: list[dict[str, Any]] = []
     for i in range(count):
         path = os.path.join(outdir, f"pin_{i+1:02d}.png")
         render_pin(data, palette, heads[i % len(heads)], seed=100 + i * 7, out_path=path)
@@ -220,7 +228,7 @@ def build(themes_path, outdir, count=5):
     return out
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--themes", required=True)
     ap.add_argument("--outdir", required=True)
