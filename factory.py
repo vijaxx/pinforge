@@ -4,7 +4,9 @@
     python3 factory.py --theme animals
     python3 factory.py --all
 """
+from __future__ import annotations
 import argparse, glob, json, os, time
+from typing import Any
 
 import pack, pins, pincopy
 
@@ -17,7 +19,7 @@ OUT_DIR = os.path.join(HERE, "out")
 PRICE_USD = 4.99
 
 
-def run_theme(theme):
+def run_theme(theme: str) -> dict[str, Any]:
     themes_path = os.path.join(THEMES_DIR, f"{theme}.json")
     if not os.path.exists(themes_path):
         raise SystemExit(f"no such theme: {themes_path}")
@@ -68,7 +70,7 @@ def run_theme(theme):
     return manifest
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--theme")
     ap.add_argument("--all", action="store_true")

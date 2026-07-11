@@ -2,7 +2,9 @@
 """Digital, print-at-home version of a puzzle pack for Gumroad. Same
 word-search engine as the KDP paperbacks (imported from ../kdp), repackaged
 with a personal-use license page and a cross-sell to the paperback line."""
+from __future__ import annotations
 import argparse, json, os, random, sys
+from typing import Any
 
 KDP_DIR = os.environ.get("KDP_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kdp")
 if not os.path.isdir(KDP_DIR):  # live dir moved; fall back to the canonical KDP engine location
@@ -11,6 +13,7 @@ sys.path.insert(0, KDP_DIR)
 import wordsearch as ws  # noqa: E402  (the KDP engine — puzzles, grids, solutions)
 
 from reportlab.pdfgen import canvas  # noqa: E402
+from reportlab.pdfgen.canvas import Canvas  # noqa: E402
 from reportlab.lib.pagesizes import letter  # noqa: E402
 
 PAGE_W, PAGE_H = letter
@@ -18,7 +21,7 @@ MARGIN = 54
 GUMROAD_NOTE = "evergreenpuzzlepress.gumroad.com"
 
 
-def digital_cover(c, title, subtitle, author, n_puzzles):
+def digital_cover(c: Canvas, title: str, subtitle: str, author: str, n_puzzles: int) -> None:
     c.setFillColorRGB(0.96, 0.95, 0.91)
     c.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
     c.setFillColorRGB(0.16, 0.32, 0.25)
@@ -57,7 +60,7 @@ def digital_cover(c, title, subtitle, author, n_puzzles):
     c.showPage()
 
 
-def license_page(c, author):
+def license_page(c: Canvas, author: str) -> None:
     c.setFillColorRGB(0.1, 0.1, 0.1)
     c.setFont("SansB", 20)
     c.drawCentredString(PAGE_W / 2, PAGE_H - 140, "YOUR LICENSE (THE SHORT VERSION)")
@@ -80,7 +83,7 @@ def license_page(c, author):
     c.showPage()
 
 
-def cross_sell_page(c, author, also_from):
+def cross_sell_page(c: Canvas, author: str, also_from: list[dict]) -> None:
     """The flywheel page: every digital download advertises the paperback line."""
     c.setFillColorRGB(0.1, 0.1, 0.1)
     c.setFont("SansB", 24)
@@ -108,7 +111,7 @@ def cross_sell_page(c, author, also_from):
     c.showPage()
 
 
-def build(themes_path, out_path, seed=11):
+def build(themes_path: str, out_path: str, seed: int = 11) -> dict[str, Any]:
     random.seed(seed)
     data = json.load(open(themes_path))
     title = data.get("title", "Word Search") + " — Printable Pack"
@@ -142,7 +145,7 @@ def build(themes_path, out_path, seed=11):
     return {"title": title, "author": author, "puzzles": n_puzzles, "pdf": out_path}
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--themes", required=True)
     ap.add_argument("--out", required=True)
